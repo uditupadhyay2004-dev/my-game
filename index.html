@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Final Cricket Game</title>
+<style>
+  body { text-align: center; font-family: Arial; }
+
+  #game {
+    width: 320px;
+    height: 420px;
+    margin: auto;
+    border: 2px solid black;
+    position: relative;
+    background: lightgreen;
+    overflow: hidden;
+  }
+
+  #bat {
+    width: 60px;
+    height: 10px;
+    background: brown;
+    position: absolute;
+    bottom: 20px;
+    left: 130px;
+  }
+
+  #ball {
+    width: 15px;
+    height: 15px;
+    background: red;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 150px;
+  }
+
+  button { padding: 8px; margin: 5px; }
+</style>
+</head>
+<body>
+
+<h2>🏏 Cricket Game Ultimate</h2>
+
+<!-- Toss -->
+<div id="toss">
+  <h3>Toss Call:</h3>
+  <button onclick="doToss('head')">Head</button>
+  <button onclick="doToss('tail')">Tail</button>
+</div>
+
+<h3 id="info"></h3>
+<h3 id="decision">Umpire Ready 👨‍⚖️</h3>
+
+<h3>Score: <span id="score">0</span></h3>
+<h3>Wickets: <span id="wickets">0</span></h3>
+<h3>Overs: <span id="overs">0</span></h3>
+<h3>Target: <span id="target">-</span></h3>
+
+<button onclick="takeDRS()">📺 DRS</button>
+
+<div id="game" style="display:none;">
+  <div id="bat"></div>
+  <div id="ball"></div>
+</div>
+
+<script>
+let batting = true;
+let firstInnings = true;
+
+let score = 0;
+let wickets = 0;
+let balls = 0;
+let maxBalls = 30;
+let target = 0;
+
+let drsLeft = 2;
+
+let bat = document.getElementById("bat");
+let ball = document.getElementById("ball");
+
+let batLeft = 130;
+let ballTop = 0;
+let ballLeft = 150;
+let hit = false;
+
+let lastDecision = "";
+
+// Toss first
+function doToss(choice) {
+  let result = Math.random() < 0.5 ? "head" : "tail";
+
+  if (choice === result) {
+    batting = true;
+    document.getElementById("info").innerText = "You won toss! Batting 🏏";
+  } else {
+    batting = false;
+    document.getElementById("info").innerText = "Opponent Batting 🎯";
+  }
+
+  document.getElementById("toss").style.display = "none";
+  document.getElementById("game").style.display = "block";
+}
+
+// Controls
+document.addEventListener("keydown", function(e) {
+  if (e.key === "ArrowLeft" && batLeft > 0) batLeft -= 20;
+  if (e.key === "ArrowRight" && batLeft < 260) batLeft += 20;
+  if (e.code === "Space") {
+    hit = true;
+    setTimeout(() => hit = false, 300);
+  }
+  bat.style.left = batLeft + "px";
+});
+
+// DRS
+function takeDRS() {
+  if (drsLeft <= 0) {
+    alert("No DRS left ❌");
+    return;
+  }
+
+  drsLeft--;
+
+  if (lastDecision === "OUT" && Math.random() > 0.5) {
+    wickets--;
+    document.getElementById("decision").innerText = "DRS: NOT OUT 😎";
+  } else {
+    document.getElementById("decision").innerText = "DRS: Umpire Call 😐";
+  }
+}
+
+// Game Loop
+setInterval(() => {
+
+  ballTop += 5;
+  ballLeft += Math.random()*10 - 5;
+
+  ball.style.top = ballTop + "px";
+  ball.style.left = ballLeft + "px";
+
+  if (ballTop > 330) {
+
+    let event = Math.random();
+
+    // NO BALL
+    if (event < 0.1) {
+      score += 1;
+      document.getElementById("decision").innerText = "No Ball 🚫";
+    }
+    // WIDE
+    else if (event < 0.2) {
+      score += 1;
+      document.getElementById("decision").innerText = "Wide ➡️";
+    }
+    else {
+
+      if (batting) {
+        if (hit && ballLeft > batLeft && ballLeft < batLeft+60) {
+          let runs = [1,2,4,6][Math.floor(Math.random()*4)];
+          score += runs;
+          document.getElementById("decision").innerText = runs + " Runs 🏏";
+          lastDecision = "RUN";
+        } else {
+          wickets++;
+          document.getElementById("decision").innerText = "OUT ❌";
+          lastDecision = "OUT";
+        }
+      } else {
+        // Opponent batting
+        if (Math.random() < 0.3) {
+          wickets++;
+          document.getElementById("decision").innerText = "OUT ❌";
+        } else {
+          let runs = Math.floor(Math.random()*6);
+          score += runs;
+          document.getElementById("decision").innerText = runs + " Runs";
+        }
+      }
+
+      balls++;
+    }
+
+    document.getElementById("score").innerText = score;
+    document.getElementById("wickets").innerText = wickets;
+    document.getElementById("overs").innerText = (balls/6).toFixed(1);
+
+    // Innings change
+    if (balls >= maxBalls || wickets >= 10) {
+
+      if (firstInnings) {
+        target = score + 1;
+        document.getElementById("target").innerText = target;
+
+        score = 0;
+        wickets = 0;
+        balls = 0;
+
+        firstInnings = false;
+        batting = !batting;
+
+        document.getElementById("decision").innerText = "2nd Innings Start 🔥";
+        return;
+      } else {
+        if (score >= target) {
+          alert("You Win 😎🔥");
+        } else {
+          alert("Opponent Wins 😢");
+        }
+        location.reload();
+      }
+    }
+
+    ballTop = 0;
+    ballLeft = Math.random()*280;
+  }
+
+}, 30);
+</script>
+
+</body>
+</html>
